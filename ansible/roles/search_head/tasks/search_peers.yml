@@ -15,6 +15,22 @@
     splunk_rest_endpoint: /services/search/distributed/peers
   register: current_dservers
 
+- name: Debug Python interpreter and check jmespath availability
+  command: "{{ ansible_facts['discovered_interpreter_python'] }} -m pip show jmespath"
+  register: jmespath_check
+  failed_when: jmespath_check.rc != 0
+  changed_when: false
+  ignore_errors: true
+
+- name: Debug jmespath check results
+  debug:
+    msg: >
+      {%- if jmespath_check.rc == 0 -%}
+      jmespath is installed: {{ jmespath_check.stdout }}
+      {%- else -%}
+      jmespath is not installed
+      {%- endif -%}
+
 - name: create current_dservers list
   tags:
     - splunk
