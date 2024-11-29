@@ -2,6 +2,19 @@
 # Handlers are run in the order they are listed, not in the order that they are notified
 # See: https://docs.ansible.com/ansible/latest/reference_appendices/glossary.html#Notify
 
+- name: restart splunk on the deployer before pushing the bundle
+  tags:
+    - splunk
+    - splunk_common
+    - splunk_software
+  service:
+    name: "{{splunk_service_name}}"
+    state: restarted
+  become: yes
+  become_user: root
+  delegate_to: "{{ splunk_shc_deployer }}"
+  when: app_path == splunk_home + '/etc/apps'
+
 - name: wait for SHC service ready and call push bundle
   tags:
     - splunk
