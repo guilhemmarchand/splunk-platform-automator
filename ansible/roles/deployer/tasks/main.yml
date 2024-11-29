@@ -58,8 +58,8 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_all_deploymentclient'
-    app_path: '{{splunk_home}}/etc/apps'
+    app_name: "org_all_deploymentclient"
+    app_path: "{{splunk_home}}/etc/apps"
   when: splunk_deployment_server|default()|length > 0 and inventory_hostname not in groups.role_deployment_server
 
 - name: apply baseconfig app org_all_forwarder_outputs
@@ -71,8 +71,8 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_all_forwarder_outputs'
-    app_path: '{{splunk_home}}/etc/apps'
+    app_name: "org_all_forwarder_outputs"
+    app_path: "{{splunk_home}}/etc/apps"
   when: splunk_deployment_server|default()|length == 0 and inventory_hostname not in groups.role_indexer
 
 - name: install certs for web ssl
@@ -96,8 +96,8 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_all_search_base'
-    app_path: '{{splunk_home}}/etc/apps'
+    app_name: "org_all_search_base"
+    app_path: "{{splunk_home}}/etc/apps"
   when: splunk_deployment_server|default()|length == 0
 
 - name: apply baseconfig app org_full_license_server
@@ -109,8 +109,8 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_full_license_server'
-    app_path: '{{splunk_home}}/etc/apps'
+    app_name: "org_full_license_server"
+    app_path: "{{splunk_home}}/etc/apps"
   when: splunk_deployment_server|default()|length == 0 and splunk_license_manager|default()|length > 0 and inventory_hostname not in groups.role_license_manager|default([])
 
 - name: apply baseconfig app org_search_volume_indexes
@@ -122,8 +122,8 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_search_volume_indexes'
-    app_path: '{{splunk_home}}/etc/shcluster/apps'
+    app_name: "org_search_volume_indexes"
+    app_path: "{{splunk_home}}/etc/shcluster/apps"
 
 - name: apply baseconfig app org_all_indexes
   tags:
@@ -134,8 +134,8 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_all_indexes'
-    app_path: '{{splunk_home}}/etc/shcluster/apps'
+    app_name: "org_all_indexes"
+    app_path: "{{splunk_home}}/etc/shcluster/apps"
 
 - name: apply baseconfig app org_all_search_base
   tags:
@@ -146,8 +146,8 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_all_search_base'
-    app_path: '{{splunk_home}}/etc/shcluster/apps'
+    app_name: "org_all_search_base"
+    app_path: "{{splunk_home}}/etc/shcluster/apps"
 
 - name: apply baseconfig app org_cluster_search_base
   tags:
@@ -158,8 +158,8 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_cluster_search_base'
-    app_path: '{{ splunk_home }}/etc/shcluster/apps'
+    app_name: "org_cluster_search_base"
+    app_path: "{{ splunk_home }}/etc/shcluster/apps"
     splunk_search_peer_list: "{{ hostvars[groups['search_peer_'+splunk_env_name+'_'+search_peer_name][0]]['splunk_search_peer_list'] }}"
   with_items: "{{ splunk_search_peer_name_list }}"
   loop_control:
@@ -175,8 +175,8 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_all_forwarder_outputs'
-    app_path: '{{splunk_home}}/etc/shcluster/apps'
+    app_name: "org_all_forwarder_outputs"
+    app_path: "{{splunk_home}}/etc/shcluster/apps"
     splunk_output_list: "{{ hostvars[groups['output_'+splunk_env_name+'_'+output_name][0]]['splunk_output_list'] }}"
   with_items: "{{ splunk_outputs_name_list }}"
   loop_control:
@@ -191,9 +191,26 @@
   include_role:
     name: baseconfig_app
   vars:
-    app_name: 'org_full_license_server'
-    app_path: '{{splunk_home}}/etc/shcluster/apps'
+    app_name: "org_full_license_server"
+    app_path: "{{splunk_home}}/etc/shcluster/apps"
   when: splunk_license_manager|default()|length > 0
+
+- name: restart splunk
+  service:
+    name: "{{splunk_service_name}}"
+    state: restarted
+  become: yes
+  become_user: root
+
+- name: wait for splunkd port
+  include_role:
+    name: splunk_common
+    tasks_from: wait_for_splunkd_port
+
+- name: wait for splunkd full service
+  include_role:
+    name: splunk_common
+    tasks_from: wait_for_splunkd_full
 
 - name: call update_dserver from role monitoring_console
   tags:
